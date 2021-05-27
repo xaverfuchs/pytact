@@ -3,7 +3,7 @@ This file shows some example calls of functions from the module
 # Initialization
 
 ```python
-from tactpy import *
+from pytact import *
 initiateLJ() #runs the initialization function (see defaults: by defaults expects Labjack T4)
 intitRTChannels(channels=["FIO4", "FIO5"]) #actually this just sets the ports to HIGH (which they mostly are anyway after turning devive on
 ```
