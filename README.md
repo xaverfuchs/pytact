@@ -6,6 +6,7 @@ Author: Xaver Fuchs, October 2020, xaver.fuchs@uni-bielefeld.de
 Module to control Tactamp and switchboxes by Dancer Design and response buttons using Labjack T series DAC devices
 
 ## To do 
+- add detailed description of experimental setup
 - write functions for timing self-test
 - implement support for National Instruments (NI) devices
 
