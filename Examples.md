@@ -4,7 +4,7 @@ This file shows some example calls of functions from the module
 
 ```python
 from pytact import *
-initiateLJ() #runs the initialization function (see defaults: by defaults expects Labjack T4)
+initiateLJ() #runs the initialization function (see defaults: by default expects Labjack T4)
 intitRTChannels(channels=["FIO4", "FIO5"]) #actually this just sets the ports to HIGH (which they mostly are anyway after turning devive on
 ```
 
