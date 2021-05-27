@@ -279,7 +279,7 @@ def stimAndRecord(Stimulators=[1], Onsets=[0], Durations=[0.01], Intensities=[1.
 
     Responses = RTReader.result()
 
-    #this is optionally but probably useful: reshape the output format
+    #this is optional but probably useful: reshape the output format
     RTList=sortResponses(Responses)
     return(RTList)
 
