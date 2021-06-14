@@ -29,7 +29,7 @@ def closeLJ():
 # XXXXXXXXXXXXXXXXXXXXXXXXX FUNCTIONS FOR STIMULI XXXXXXXXXXXXXXXXXXXXXXXXXX
 
 #for a rectangular type of trial
-def startTrialLJ(Stimulator=1, Onset=0, Duration=0.1, Intensity=1.5, returnTimers=False, LJWaitTime=0, rezeroDAC=True):
+def startTrialLJ(Stimulator=1, Onset=0, Duration=0.1, Intensity=1.5, returnTimers=False, LJWaitTime=0, rezeroDAC=True, DAC="DAC0"):
     '''
     Changes 2020-12: there is a flag now defining whether the DAC is returned to zero volts at the end or not. 
     In some instances, when  triggering  fast, this can be a disadvantage, hece the option
@@ -38,7 +38,7 @@ def startTrialLJ(Stimulator=1, Onset=0, Duration=0.1, Intensity=1.5, returnTimer
     
     StartTime=time.perf_counter()
     numFrames = 11
-    names = ["DAC0", "EIO0", "EIO1", "EIO2", "EIO3", "EIO4", "EIO5", "EIO6", "EIO7", "CIO0", "CIO1"] #first for dac, the rest for switch box
+    names = [DAC, "EIO0", "EIO1", "EIO2", "EIO3", "EIO4", "EIO5", "EIO6", "EIO7", "CIO0", "CIO1"] #first for dac, the rest for switch box
     aValues = [Intensity, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] #intensity in volts, the rest are DIO states that are initially zero
     aValues[Stimulator]=1
 
@@ -67,7 +67,7 @@ def startTrialLJ(Stimulator=1, Onset=0, Duration=0.1, Intensity=1.5, returnTimer
         return StartTime, TrialStartTime, TrialEndTime
 
 
-def startMultipleTrialsLJ(Stimulators=[1], Onsets=[0], Durations=[0.01], Intensities=[1.5], returnTimers=False, LJWaitTime=0.001):
+def startMultipleTrialsLJ(Stimulators=[1], Onsets=[0], Durations=[0.01], Intensities=[1.5], returnTimers=False, rezeroDAC=True, LJWaitTime=0.001, DACs=["DAC0"]):
     '''
     Functionality:
         there are three lists:
@@ -85,11 +85,13 @@ def startMultipleTrialsLJ(Stimulators=[1], Onsets=[0], Durations=[0.01], Intensi
     #timer for the wait time
     StartTime=time.perf_counter()
     
-    #check if Intensities and/or Durations are one-element lists
+    #check if Intensities and/or Durations and DACs are one-element lists
     if len(Intensities)==1:
         Intensities=[Intensities[0] for i in range(0, len(Stimulators))]
     if len(Durations)==1:
         Durations=[Durations[0] for i in range(0, len(Stimulators))]
+    if len(DACs)==1:
+        DACs=[DACs[0] for i in range(0, len(Stimulators))]
     
     
     #bring stimli in correct order
@@ -98,6 +100,7 @@ def startMultipleTrialsLJ(Stimulators=[1], Onsets=[0], Durations=[0.01], Intensi
     Stimulators=[Stimulators[i] for i in OnsetOrder]
     Durations=[Durations[i] for i in OnsetOrder]
     Intensities=[Intensities[i] for i in OnsetOrder]
+    DACs=[DACs[i] for i in OnsetOrder]
     
     #list for collecting trigger times
     TriggerTimes=[]
@@ -112,14 +115,14 @@ def startMultipleTrialsLJ(Stimulators=[1], Onsets=[0], Durations=[0.01], Intensi
         Onset=Onsets[i]
         Duration=Durations[i]
         Intensity=Intensities[i]
-
-
-        while (float(TrialTimer.getTime())) < float(Onset):
+        DAC=DACs[i]
+        
+        while (float(time.perf_counter() - Trial_StartTime)) < float(Onset):
             pass
 
         #record time and start trial
         TriggerTimes.append(time.perf_counter() - Trial_StartTime)
-        startTrialLJ(Stimulator, Onset, Duration, Intensity, returnTimers=returnTimers, LJWaitTime=0, rezeroDAC=False)
+        startTrialLJ(Stimulator, Onset, Duration, Intensity, returnTimers=returnTimers, LJWaitTime=0, rezeroDAC=rezeroDAC, DAC=DAC)
     if returnTimers:
         return(TriggerTimes)
 
@@ -266,11 +269,11 @@ def wasReleasedButton(RTList, Button=1):
 # XXXXXXXXXXXXXXXXXXXXXXXXX HIGHER ORDER FUNCTIONS WITH PARALLEL FUNCTIONALITY XXXXXXXXXXXXXXXXXXXXXXXXXX
 
 #usually one wants to start a stimulus and simultaneously start recording response times
-def stimAndRecord(Stimulators=[1], Onsets=[0], Durations=[0.01], Intensities=[1.5], returnTimers=False, LJWaitTime=0, buttons=[1, 2], channels=["FIO4", "FIO5"], pollInterval=0.001, postResponseWaitTime=0.5, maxTime=3, debounceTime=0.03):
+def stimAndRecord(Stimulators=[1], Onsets=[0], Durations=[0.01], Intensities=[1.5], returnTimers=False, rezeroDAC=True, LJWaitTime=0, DACs=["DAC0"], buttons=[1, 2], channels=["FIO4", "FIO5"], pollInterval=0.001, postResponseWaitTime=0.5, maxTime=3, debounceTime=0.03):
     executor=concurrent.futures.ThreadPoolExecutor()
 
     #these functions inherit input from main function
-    Stimulator = executor.submit(startMultipleTrialsLJ, Stimulators, Onsets, Durations, Intensities, returnTimers, LJWaitTime)
+    Stimulator = executor.submit(startMultipleTrialsLJ, Stimulators, Onsets, Durations, Intensities, returnTimers, rezeroDAC, LJWaitTime, DACs)
     RTReader = executor.submit(readRT, buttons, channels, pollInterval, postResponseWaitTime, maxTime, debounceTime)
 
     #now wait for both processes to finish
